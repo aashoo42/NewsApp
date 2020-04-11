@@ -9,25 +9,28 @@
 import UIKit
 import Alamofire
 import AlamofireImage
+import GoogleMobileAds
 
 class NewsVC: UIViewController {
 
     @IBOutlet weak var newsTableView: UITableView!
-   
+    @IBOutlet weak var typesCollectionView: UICollectionView!
+    
+    
     private var newsArray = NSArray()
+    
+    private var newsTypeName = ["Headlines", "Business", "Sports", "Health", "Tecnology"]
     
     override func viewDidLoad() {
         super.viewDidLoad()
 
         newsTableView.estimatedRowHeight = 100
         newsTableView.rowHeight = UITableView.automaticDimension
-//        navigationController?.navigationBar.barTintColor = UIColor.init(red: 0.0/255.0, green: 157.0/255.0, blue: 215.0/255.0, alpha: 0.5)
-//        navigationController?.navigationBar.tintColor = UIColor.white
-        
-        callApi()
-//        (UIApplication.shared.delegate as! AppDelegate).showInterstitialAd(controller: self)
+
+//        callApi()
+        (UIApplication.shared.delegate as! AppDelegate).setupInterstitialAd()
+
     }
-    
     
     
     func callApi(){
@@ -35,15 +38,16 @@ class NewsVC: UIViewController {
 //        let urlStr = "https://newscafapi.p.rapidapi.com/apirapid/news/?q=home"
         
 //        http://newsapi.org/v2/everything?q=bitcoin&from=2020-03-06&sortBy=publishedAt&apiKey=ad8d9cbb3adb46cd900b80e2ff22625a
-        let urlStr = "http://newsapi.org/v2/top-headlines?country=us&category=business&apiKey=ad8d9cbb3adb46cd900b80e2ff22625a"
+//        let urlStr = "http://newsapi.org/v2/top-headlines?country=&category=&apiKey=ad8d9cbb3adb46cd900b80e2ff22625a"
 //        http://newsapi.org/v2/everything?q=apple&from=2020-04-05&to=2020-04-05&sortBy=popularity&apiKey=ad8d9cbb3adb46cd900b80e2ff22625a
 //        http://newsapi.org/v2/top-headlines?sources=techcrunch&apiKey=ad8d9cbb3adb46cd900b80e2ff22625a
 //        http://newsapi.org/v2/everything?domains=wsj.com&apiKey=ad8d9cbb3adb46cd900b80e2ff22625a
         
-        let headers = [
-            "x-rapidapi-host": "newscafapi.p.rapidapi.com",
-            "x-rapidapi-key": "c4b7f6c03amshb614de998b9c9dap1a91e3jsncbcc3a6c56b3"
-        ]
+        let urlStr = "http://newsapi.org/v2/top-headlines?country=\(getCountryFromDefaults().countryCode)&apiKey=ad8d9cbb3adb46cd900b80e2ff22625a"
+        //  business, sports, health, tecnology
+        
+        let params = ["country": getCountryFromDefaults().countryCode,
+                      "apiKey": "ad8d9cbb3adb46cd900b80e2ff22625a"]
         
         Alamofire.request(urlStr, method: .get).responseJSON { (response) in
             if response.result.value != nil{
@@ -59,7 +63,7 @@ class NewsVC: UIViewController {
         let tempDict = self.newsArray[sender.tag] as! NSDictionary
         objNewsDetailVC.detailsDict = tempDict
         self.navigationController?.pushViewController(objNewsDetailVC, animated: true)
-//        (UIApplication.shared.delegate as! AppDelegate).showInterstitialAd(controller: self)
+        (UIApplication.shared.delegate as! AppDelegate).showInterstitialAd(controller: self)
     }
 }
 
@@ -81,7 +85,15 @@ extension NewsVC: UITableViewDelegate, UITableViewDataSource{
         
         let imgUrl = tempDict["urlToImage"] as? String
         if imgUrl != nil{
-            cell.imgView.af_setImage(withURL: URL.init(string: imgUrl!)!)
+            
+            cell.imgView.af_setImage(withURL: URL.init(string: imgUrl!)!,
+                                     placeholderImage: UIImage(named: "placeholder"),
+                                     filter: .none,
+                                     progress: .none,
+                                     progressQueue: .main,
+                                     imageTransition: .crossDissolve(1.0),
+                                     runImageTransitionIfCached: false,
+                                     completion: nil)
         }
         
         
@@ -96,17 +108,52 @@ extension NewsVC: UITableViewDelegate, UITableViewDataSource{
     }
     
     func tableView(_ tableView: UITableView, viewForFooterInSection section: Int) -> UIView? {
-//        let headerBannerView = GADBannerView.init(frame: CGRect.init(x: 0, y: 0, width: tableView.frame.width, height: 50))
-//        headerBannerView.adUnitID = AdsIds.bannerID
-//        headerBannerView.rootViewController = self
-//        headerBannerView.load(GADRequest())
-        return UIView()
+        let headerBannerView = GADBannerView.init(frame: CGRect.init(x: 0, y: 0, width: tableView.frame.width, height: 50))
+        headerBannerView.adUnitID = AdsIds.bannerID
+        headerBannerView.rootViewController = self
+        headerBannerView.load(GADRequest())
+        return headerBannerView
     }
     
     func tableView(_ tableView: UITableView, estimatedHeightForRowAt indexPath: IndexPath) -> CGFloat {
         return 100
     }
+    
     func tableView(_ tableView: UITableView, heightForFooterInSection section: Int) -> CGFloat {
         return 50
+    }
+}
+
+// MARK:- UICollectionView
+extension NewsVC: UICollectionViewDelegate, UICollectionViewDataSource, UICollectionViewDelegateFlowLayout{
+    func numberOfSections(in collectionView: UICollectionView) -> Int {
+        return 1
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
+        return newsTypeName.count
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
+        let cell = typesCollectionView.dequeueReusableCell(withReuseIdentifier: "TypeCell", for: indexPath) as! TypeCell
+        cell.backgroundColor = .green
+        cell.nameLbl.text = newsTypeName[indexPath.row]
+        return cell
+    }
+    func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
+        let cell = collectionView.cellForItem(at: indexPath)
+        cell?.backgroundColor = .white
+    }
+
+    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
+        return CGSize(width: 100, height: 50)
+    }
+
+    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, minimumInteritemSpacingForSectionAt section: Int) -> CGFloat {
+        return 5
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, minimumLineSpacingForSectionAt section: Int) -> CGFloat {
+        return 5
     }
 }

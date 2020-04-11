@@ -8,6 +8,8 @@
 
 import UIKit
 import Alamofire
+import GoogleMobileAds
+
 class SearchVC: UIViewController {
 
     @IBOutlet weak var searchTableView: UITableView!
@@ -18,6 +20,7 @@ class SearchVC: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
 
+        (UIApplication.shared.delegate as! AppDelegate).setupInterstitialAd()
     }
     
     func getSearchedNews(str: String){
@@ -45,7 +48,7 @@ class SearchVC: UIViewController {
         let tempDict = self.searchedArray[sender.tag] as! NSDictionary
         objNewsDetailVC.detailsDict = tempDict
         self.navigationController?.pushViewController(objNewsDetailVC, animated: true)
-//        (UIApplication.shared.delegate as! AppDelegate).showInterstitialAd(controller: self)
+        (UIApplication.shared.delegate as! AppDelegate).showInterstitialAd(controller: self)
     }
 }
 
@@ -62,57 +65,59 @@ extension SearchVC: UISearchBarDelegate{
 // MARK:- TableView
 extension SearchVC: UITableViewDelegate, UITableViewDataSource{
     func numberOfSections(in tableView: UITableView) -> Int {
-            return 1
-        }
-        
-        func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-            return searchedArray.count
-        }
-        
-        func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-            
-            let identifier = "CustomCell"
-            var cell: CustomCell! = tableView.dequeueReusableCell(withIdentifier: identifier) as? CustomCell
-            
-            if cell == nil {
-                tableView.register(UINib(nibName: "CustomCell", bundle: nil), forCellReuseIdentifier: identifier)
-                cell = tableView.dequeueReusableCell(withIdentifier: identifier) as? CustomCell
-            }
-            
-            let tempDict = self.searchedArray[indexPath.row] as! NSDictionary
-            
-            cell.titleLbl.text = tempDict["title"] as? String ?? ""
-            cell.detailsLbl.text = tempDict["description"] as? String ?? ""
-            
-            let imgUrl = tempDict["urlToImage"] as? String
-            if imgUrl != nil{
-                cell.imgView.af_setImage(withURL: URL.init(string: imgUrl!)!)
-            }
-            
-            
-            cell.seeAllBtn.tag = indexPath.row
-            cell.seeAllBtn.addTarget(self, action: #selector(seeAllDetailsAction(sender:)), for: .touchUpInside)
-            
-            return cell
-        }
-        
-        func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
-            return UITableView.automaticDimension
-        }
-        
-        func tableView(_ tableView: UITableView, viewForFooterInSection section: Int) -> UIView? {
-    //        let headerBannerView = GADBannerView.init(frame: CGRect.init(x: 0, y: 0, width: tableView.frame.width, height: 50))
-    //        headerBannerView.adUnitID = AdsIds.bannerID
-    //        headerBannerView.rootViewController = self
-    //        headerBannerView.load(GADRequest())
-            return UIView()
-        }
-        
-        func tableView(_ tableView: UITableView, estimatedHeightForRowAt indexPath: IndexPath) -> CGFloat {
-            return 100
-        }
-        func tableView(_ tableView: UITableView, heightForFooterInSection section: Int) -> CGFloat {
-            return 50
-        }
+    return 1
+    }
+
+    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+    return searchedArray.count
+    }
+
+    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+
+    let identifier = "CustomCell"
+    var cell: CustomCell! = tableView.dequeueReusableCell(withIdentifier: identifier) as? CustomCell
+
+    if cell == nil {
+    tableView.register(UINib(nibName: "CustomCell", bundle: nil), forCellReuseIdentifier: identifier)
+    cell = tableView.dequeueReusableCell(withIdentifier: identifier) as? CustomCell
+    }
+
+    let tempDict = self.searchedArray[indexPath.row] as! NSDictionary
+
+    cell.titleLbl.text = tempDict["title"] as? String ?? ""
+    cell.detailsLbl.text = tempDict["description"] as? String ?? ""
+
+    let imgUrl = tempDict["urlToImage"] as? String
+    if imgUrl != nil{
+    cell.imgView.af_setImage(withURL: URL.init(string: imgUrl!)!)
+    }
+
+
+    cell.seeAllBtn.tag = indexPath.row
+    cell.seeAllBtn.addTarget(self, action: #selector(seeAllDetailsAction(sender:)), for: .touchUpInside)
+
+    return cell
+    }
+
+    func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
+        return UITableView.automaticDimension
+    }
+
+    func tableView(_ tableView: UITableView, viewForFooterInSection section: Int) -> UIView? {
+        let headerBannerView = GADBannerView.init(frame: CGRect.init(x: 0, y: 0, width: tableView.frame.width, height: 50))
+        headerBannerView.adUnitID = AdsIds.bannerID
+        headerBannerView.rootViewController = self
+        headerBannerView.load(GADRequest())
+        return headerBannerView
+    }
+
+    func tableView(_ tableView: UITableView, estimatedHeightForRowAt indexPath: IndexPath) -> CGFloat {
+        return 100
+    }
+    
+    func tableView(_ tableView: UITableView, heightForFooterInSection section: Int) -> CGFloat {
+        return 50
+    }
+
 
 }

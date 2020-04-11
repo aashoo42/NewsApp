@@ -39,7 +39,7 @@ class NewsDetailVC: UIViewController, WKNavigationDelegate {
         
         observation = newsWebView.observe(\WKWebView.estimatedProgress, options: .new) { _, change in
             self.progressView.progress = Float(change.newValue!)
-            if self.progressView.progress > 0.65{
+            if self.progressView.progress > 0.80{
                 self.progressView.isHidden = true
             }
         }
