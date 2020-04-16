@@ -9,6 +9,15 @@
 import UIKit
 
 class TypeCell: UICollectionViewCell {
-    @IBOutlet weak var nameLbl: UILabel!
     
+    @IBOutlet weak var nameLbl: UILabel!
+    @IBOutlet weak var bottomLine: UIView!
+    
+    override func awakeFromNib() {
+        DispatchQueue.main.async {
+            self.bottomLine.layer.cornerRadius = 2
+            self.bottomLine.layer.masksToBounds = true
+        }
+        
+    }
 }

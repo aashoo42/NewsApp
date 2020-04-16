@@ -32,8 +32,8 @@ class NewsDetailVC: UIViewController, WKNavigationDelegate {
         newsWebView.navigationDelegate = self
         
         let urlStr = detailsDict["url"] as! String
-        let url = URL(string: urlStr)
-        let urlRequest = URLRequest(url: url!)
+        guard let url = URL(string: urlStr)else{return}
+        let urlRequest = URLRequest(url: url)
         
         newsWebView.load(urlRequest)
         

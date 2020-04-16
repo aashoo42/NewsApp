@@ -10,6 +10,7 @@ import UIKit
 import Alamofire
 import AlamofireImage
 import GoogleMobileAds
+import UITableViewCellAnimation
 
 class NewsVC: UIViewController {
 
@@ -18,8 +19,10 @@ class NewsVC: UIViewController {
     
     
     private var newsArray = NSArray()
-    
     private var newsTypeName = ["Headlines", "Business", "Sports", "Health", "Tecnology"]
+    private var newsName = ["", "business", "sports", "health", "technology"]
+    
+    var selectedType = 0
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -27,13 +30,13 @@ class NewsVC: UIViewController {
         newsTableView.estimatedRowHeight = 100
         newsTableView.rowHeight = UITableView.automaticDimension
 
-//        callApi()
+        getNews(ofType: newsName[0])
+        
         (UIApplication.shared.delegate as! AppDelegate).setupInterstitialAd()
-
     }
     
     
-    func callApi(){
+    func getNews(ofType type: String){
         
 //        let urlStr = "https://newscafapi.p.rapidapi.com/apirapid/news/?q=home"
         
@@ -43,17 +46,17 @@ class NewsVC: UIViewController {
 //        http://newsapi.org/v2/top-headlines?sources=techcrunch&apiKey=ad8d9cbb3adb46cd900b80e2ff22625a
 //        http://newsapi.org/v2/everything?domains=wsj.com&apiKey=ad8d9cbb3adb46cd900b80e2ff22625a
         
-        let urlStr = "http://newsapi.org/v2/top-headlines?country=\(getCountryFromDefaults().countryCode)&apiKey=ad8d9cbb3adb46cd900b80e2ff22625a"
-        //  business, sports, health, tecnology
-        
-        let params = ["country": getCountryFromDefaults().countryCode,
-                      "apiKey": "ad8d9cbb3adb46cd900b80e2ff22625a"]
-        
+        let currentCountry = getCountryFromDefaults().countryCode
+        let urlStr = "http://newsapi.org/v2/top-headlines?country=\(currentCountry)&category=\(type)&apiKey=ad8d9cbb3adb46cd900b80e2ff22625a"
+//        let urlStr = "http://newsapi.org/v2/\(type)?country=\(getCountryFromDefaults().countryCode)&apiKey=ad8d9cbb3adb46cd900b80e2ff22625a"
+        print(urlStr)
         Alamofire.request(urlStr, method: .get).responseJSON { (response) in
             if response.result.value != nil{
                 let reponseJson = response.result.value as! NSDictionary
                 self.newsArray = reponseJson["articles"] as! NSArray
                 self.newsTableView.reloadData()
+            }else{
+                print("Error:" , response.result.value)
             }
         }
     }
@@ -122,6 +125,10 @@ extension NewsVC: UITableViewDelegate, UITableViewDataSource{
     func tableView(_ tableView: UITableView, heightForFooterInSection section: Int) -> CGFloat {
         return 50
     }
+    
+    func tableView(_ tableView: UITableView, willDisplay cell: UITableViewCell, forRowAt indexPath: IndexPath) {
+        cell.rightInAnimation(forIndex: indexPath.row)
+    }
 }
 
 // MARK:- UICollectionView
@@ -136,17 +143,30 @@ extension NewsVC: UICollectionViewDelegate, UICollectionViewDataSource, UICollec
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         let cell = typesCollectionView.dequeueReusableCell(withReuseIdentifier: "TypeCell", for: indexPath) as! TypeCell
-        cell.backgroundColor = .green
+        if selectedType == indexPath.row{
+            cell.bottomLine.backgroundColor = .red
+        }else{
+            cell.bottomLine.backgroundColor = .white
+        }
+        
         cell.nameLbl.text = newsTypeName[indexPath.row]
         return cell
     }
+    
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
-        let cell = collectionView.cellForItem(at: indexPath)
-        cell?.backgroundColor = .white
+        selectedType = indexPath.row
+        collectionView.reloadData()
+        
+        collectionView.scrollToItem(at: indexPath, at: .centeredHorizontally, animated: true)
+        getNews(ofType: newsName[selectedType])
+        
+        if newsTableView.visibleCells.count > 0{
+            self.newsTableView.scrollToRow(at: .init(row: 0, section: 0), at: .top, animated: true)
+        }
     }
 
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
-        return CGSize(width: 100, height: 50)
+        return CGSize(width: 100, height: 40)
     }
 
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, minimumInteritemSpacingForSectionAt section: Int) -> CGFloat {

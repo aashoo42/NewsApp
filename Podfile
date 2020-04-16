@@ -9,4 +9,9 @@ target 'GenericApp' do
 
 pod 'Alamofire', '4.7.1'
 pod 'AlamofireImage'
+pod 'CountriesViewController'
+pod 'Google-Mobile-Ads-SDK'
+#pod 'LoadingShimmer'
+pod 'UITableViewCellAnimation'
+
 end
